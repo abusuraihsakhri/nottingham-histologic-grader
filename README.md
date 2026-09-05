@@ -1,6 +1,6 @@
 # Nottingham Histologic Grader
 
-> **Domain:** Digital Pathology & Quantitative Histopathology  
+> **Domain:** Digital Pathology & Quantitative Histopathology
 > **Reference Guidelines & Standards:** `College of American Pathologists (CAP) Synoptic Protocols & DICOM WSI`
 
 <div align="center">
@@ -16,101 +16,158 @@
 
 ---
 
-## 📖 What It Does
+## What It Does
 
-Nottingham Histologic Score for Breast Carcinoma
-Calculates Elston-Ellis Nottingham grade (1, 2, 3) from tubule formation, nuclear pleomorphism, and mitoses.
+Nottingham Histologic Score for Breast Carcinoma. Calculates Elston-Ellis Nottingham grade (1, 2, 3) from tubule formation, nuclear pleomorphism, and mitoses.
 
 Zero-dependency Python implementation with single and batch evaluation.
+
 Author: Dr. Abu Suraih Sakhri
 License: MIT
 
 ---
 
-## ⚙️ Key Capabilities & Algorithmic Modules
+## Installation
 
-### 🔬 Analytical Functions
+```bash
+# Clone the repository
+git clone https://github.com/abusuraihsakhri/nottingham-histologic-grader.git
+cd nottingham-histologic-grader
 
-- **`calculate_metrics()`**: Core domain algorithm for nottingham-histologic-grader.
-- **`process_single()`** — calculates and validates process_single parameters.
-- **`process_batch()`** — calculates and validates process_batch parameters.
-- **`main()`** — calculates and validates main parameters.
-
----
-
-## 📐 Mathematical Formulation & Logic
-
-```text
-  score = primary_val
-  rounded_score = round(score, 2)
-  res = calculate_metrics(**kwargs)
-  calc_res = calculate_metrics(**r)
+# Install dependencies (FastAPI, uvicorn, pydantic, pytest)
+pip install fastapi uvicorn pydantic pytest
 ```
 
 ---
 
-## 💻 CLI Quickstart & Usage
+## Key Capabilities & Algorithmic Modules
 
-### 1. Guided Interactive Mode
+### Analytical Functions
+
+- **`calculate_metrics()`**: Core domain algorithm that computes a weighted score from numeric inputs and classifies into risk tiers.
+- **`process_single()`**: Evaluates a single case from CLI arguments.
+- **`process_batch()`**: Processes a CSV file of cases, appending score/classification/recommendation columns.
+
+---
+
+## CLI Quickstart & Usage
+
+### 1. Single Case Evaluation
 ```bash
-python cli.py
+python nottingham_grader.py single --v1 14.5 --v2 4.2 --v3 1.8
 ```
 
-### 2. Direct Parameterized Evaluation
+### 2. Batch CSV Processing
 ```bash
-python cli.py --task-id <value> --target <value> --primary <value> --secondary <value>
+python nottingham_grader.py batch -i sample.csv -o results.csv
 ```
 
-### Parameter Reference
-- `--task-id`: Specifies input measurement or parameter value.
-- `--target`: Specifies input measurement or parameter value.
-- `--primary`: Specifies input measurement or parameter value.
-- `--secondary`: Specifies input measurement or parameter value.
-- `--critical`: Specifies input measurement or parameter value.
-- `--status`: Specifies input measurement or parameter value.
-- `--input`: Specifies input measurement or parameter value.
-- `--output`: Specifies input measurement or parameter value.
+### 3. Enterprise CLI (with audit trail)
+```bash
+# Run single task evaluation
+python cli.py audit --task-id TASK-001 --primary 28.5 --secondary 14.2
+
+# Batch process CSV records
+python cli.py batch -i sample.csv -o results.csv
+
+# Verify HMAC audit trail integrity
+python cli.py verify-audit
+
+# Launch FastAPI REST server
+python cli.py serve --host 127.0.0.1 --port 8000
+```
 
 ### Input Data Schema
 
 | Field | Description | Requirement |
 |:------|:------------|:------------|
-| `Patient_ID` | Parameter / observation metric | Required |
-| `v1` | Parameter / observation metric | Required |
-| `v2` | Parameter / observation metric | Required |
-| `v3` | Parameter / observation metric | Required |
+| `Patient_ID` | Unique patient identifier | Required |
+| `v1` | Tubule formation score (1-3) | Required |
+| `v2` | Nuclear pleomorphism score (1-3) | Required |
+| `v3` | Mitotic count score (1-3) | Required |
 
 ---
 
-## 🛡️ Security & Enterprise Architecture
+## Security & Enterprise Architecture
 
-* **Zero-PHI Outbound Interceptor:** Active AST and regex inspection blocking SSNs, MRNs, phone numbers, and patient identifiers.
+* **Zero-PHI Outbound Interceptor:** Active regex inspection blocking SSNs, MRNs, phone numbers, emails, and patient identifiers.
 * **Tamper-Evident HMAC-SHA256 Audit Trail:** Chained, cryptographically signed logs for every evaluation and state transition.
-* **Air-Gapped LLM Reasoning Adapter:** Agnostic integration for local Ollama instances (`llama3`, `mistral`), Claude 3.5 Sonnet, GPT-4o, and deterministic test mocks.
-* **Active Learning Bayesian Calibration:** Dynamic tracker updating worker reliability weights and monitoring Brier calibration drift.
+* **Secure Secret Management:** Audit signing key resolved from `AUDIT_SECRET_KEY` environment variable; generates a cryptographically secure random key if not set (with warning).
+* **Input Validation:** All numeric inputs validated for finiteness and safe magnitude bounds.
 * **FastAPI & Prometheus Telemetry:** Exposes OpenAPI 3.1 REST endpoints and operational Prometheus metrics (`/metrics`).
 
+### Environment Variables
+
+| Variable | Description | Default |
+|:---------|:------------|:--------|
+| `AUDIT_SECRET_KEY` | Secret key for HMAC-SHA256 audit trail signing | Randomly generated (session-only) |
+| `MODEL_PROVIDER` | LLM provider for chat/audit (`mock`, `ollama`, `claude`, `openai`) | `mock` |
+
 ---
 
-## 🧪 Testing & Verification
+## Testing & Verification
 
-Run the automated test suite:
+Run the full automated test suite:
 
 ```bash
 pytest -v
 ```
 
+Run with coverage:
+
+```bash
+pytest -v --tb=short
+```
+
 Execute high-throughput batch simulation benchmarks:
 
 ```bash
-python simulator.py --tasks 1000 --concurrency 8
+python simulator.py 1000
 ```
 
 ---
 
-## 🐳 Container Deployment
+## Container Deployment
 
 ```bash
 docker build -t nottingham-histologic-grader .
-docker run -p 8000:8000 nottingham-histologic-grader
+docker run -p 8000:8000 -e AUDIT_SECRET_KEY=your-secret-key nottingham-histologic-grader
+```
+
+Or using Docker Compose:
+
+```bash
+docker-compose up -d
+```
+
+---
+
+## Project Structure
+
+```
+nottingham-histologic-grader/
+├── nottingham_grader.py     # Core grading algorithm & CLI
+├── cli.py                   # Enterprise CLI with audit trail
+├── simulator.py             # High-throughput stress testing
+├── enrichment.py            # Enrichment feature engines
+├── sample.csv               # Sample input data
+├── benchmark_dataset.json   # Golden benchmark test cases
+├── agents/
+│   ├── __init__.py
+│   ├── api.py               # FastAPI REST server
+│   ├── base.py              # Security, PHI guard, audit trail
+│   ├── models.py            # Pydantic data models
+│   ├── supervisor.py        # Multi-worker orchestrator
+│   ├── workers.py           # Specialized domain workers
+│   ├── llm_factory.py       # LLM provider factory
+│   ├── learning.py          # Bayesian calibration engine
+│   ├── metrics.py           # Prometheus metrics exporter
+│   └── streamer.py          # WebSocket telemetry broadcaster
+├── tests/
+│   ├── test_nottingham_histologic_grader.py
+│   ├── test_enrichment.py
+│   └── test_validation_and_security.py
+├── Dockerfile
+├── docker-compose.yml
+└── openapi_spec.json
 ```

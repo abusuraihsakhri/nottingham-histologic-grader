@@ -1,8 +1,6 @@
 """
 Prometheus Operational Metrics Exporter for nottingham-histologic-grader.
 """
-import time
-from typing import Dict, Any
 
 class SystemMetricsCollector:
     def __init__(self):

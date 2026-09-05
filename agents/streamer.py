@@ -2,8 +2,7 @@
 Live WebSocket Distributed Component Telemetry Streamer for nottingham-histologic-grader.
 """
 import json
-import asyncio
-from typing import List, Dict, Any
+from typing import Dict, List, Any
 
 class TelemetryBroadcaster:
     """Broadcasts distributed component reasoning steps in real-time to active WebSocket clients."""

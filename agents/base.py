@@ -8,9 +8,10 @@ import json
 import time
 import hmac
 import hashlib
+import secrets
+import warnings
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timezone
-from pydantic import BaseModel, Field
 
 PHI_PATTERNS = [
     re.compile(r"\b(?:MRN|mrn)[:#\s-]*\d{4,10}\b", re.IGNORECASE),
@@ -41,6 +42,26 @@ def assert_no_phi(text: str) -> None:
             raise SecurityException(f"PHI Outbound Guard Violation: Sensitive identifier detected with pattern {pattern.pattern}")
 
 
+def _resolve_audit_secret() -> str:
+    """Resolve the audit secret key from environment or generate a cryptographically secure random key.
+
+    If AUDIT_SECRET_KEY is not set in the environment, a random key is generated
+    and a warning is emitted instructing the operator to set a persistent key.
+    """
+    env_key = os.getenv("AUDIT_SECRET_KEY")
+    if env_key:
+        return env_key
+    generated = secrets.token_hex(32)
+    warnings.warn(
+        "AUDIT_SECRET_KEY not set in environment. A transient random key has been generated "
+        "for this session. Set AUDIT_SECRET_KEY to a stable value to preserve audit "
+        "trail integrity across restarts.",
+        RuntimeWarning,
+        stacklevel=2,
+    )
+    return generated
+
+
 class PHIGuard:
     @staticmethod
     def assert_no_phi(text: str) -> None:
@@ -57,7 +78,11 @@ class PHIGuard:
 class AuditTrail:
     """Cryptographic Tamper-Evident HMAC-SHA256 Audit Trail."""
     def __init__(self, secret_key: Optional[str] = None):
-        self.secret_key = (secret_key or os.getenv("AUDIT_SECRET_KEY", "nottingham-histologic-grader-master-audit-key-2026")).encode("utf-8")
+        if secret_key is not None:
+            resolved = secret_key
+        else:
+            resolved = _resolve_audit_secret()
+        self.secret_key = resolved.encode("utf-8")
         self.logs: List[Dict[str, Any]] = []
 
     def log(self, actor: str, actor_tier: str, event_type: str, details: Dict[str, Any]) -> Dict[str, Any]:

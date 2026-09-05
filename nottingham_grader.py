@@ -12,21 +12,48 @@ import argparse
 import csv
 import json
 import math
+import os
 import sys
 from typing import Dict, Any, List, Optional
+
+
+# Maximum allowed absolute value for any numeric input (guards against overflow / injection)
+_MAX_ABS_VALUE = 1.0e9
+
+
+def _sanitize_numeric(value: float, param_name: str) -> float:
+    """Validate a single numeric value: reject NaN, infinity, and out-of-bounds values."""
+    if math.isnan(value) or math.isinf(value):
+        raise ValueError(
+            f"Parameter '{param_name}' must be a finite number, got {value!r}"
+        )
+    if abs(value) > _MAX_ABS_VALUE:
+        raise ValueError(
+            f"Parameter '{param_name}' exceeds safe magnitude bound ({_MAX_ABS_VALUE}): {value!r}"
+        )
+    return value
 
 
 def calculate_metrics(**kwargs) -> Dict[str, Any]:
     """
     Core domain algorithm for nottingham-histologic-grader.
+
+    Accepts arbitrary keyword arguments. Numeric values are coerced to float
+    and validated (finite, within safe bounds). Non-numeric values are passed
+    through as strings for metadata tracking.
     """
-    params = {}
+    params: Dict[str, Any] = {}
     for k, v in kwargs.items():
-        if v is not None:
-            try:
-                params[k] = float(v)
-            except (ValueError, TypeError):
-                params[k] = str(v)
+        if v is None:
+            continue
+        try:
+            raw_float = float(v)
+            params[k] = _sanitize_numeric(raw_float, k)
+        except (ValueError, TypeError) as exc:
+            # Re-raise validation errors from _sanitize_numeric with original context
+            if "must be a finite number" in str(exc) or "exceeds safe magnitude" in str(exc):
+                raise
+            params[k] = str(v)
 
     # Deterministic domain logic
     numeric_vals = [val for val in params.values() if isinstance(val, (int, float))]
@@ -37,7 +64,7 @@ def calculate_metrics(**kwargs) -> Dict[str, Any]:
         score += nv * (1.0 / idx)
 
     rounded_score = round(score, 2)
-    
+
     # Classification / tiering
     if rounded_score < 10.0:
         tier = "Low / Standard"
@@ -66,9 +93,22 @@ def process_single(args) -> None:
 
 
 def process_batch(input_csv: str, output_csv: str) -> None:
-    with open(input_csv, mode="r", encoding="utf-8-sig") as f:
+    """Process a CSV file of cases, appending score/classification/recommendation columns.
+
+    Raises:
+        FileNotFoundError: if input_csv does not exist.
+        PermissionError: if input/output paths are not accessible.
+        ValueError: if the input CSV is empty or has no header row.
+    """
+    input_path = os.path.abspath(input_csv)
+    if not os.path.isfile(input_path):
+        raise FileNotFoundError(f"Input CSV not found: {input_csv}")
+
+    with open(input_path, mode="r", encoding="utf-8-sig") as f:
         reader = csv.DictReader(f)
         fieldnames = list(reader.fieldnames or [])
+        if not fieldnames:
+            raise ValueError(f"Input CSV has no header row: {input_csv}")
         rows = list(reader)
 
     out_fields = fieldnames + ["score", "classification", "clinical_recommendation"]
@@ -82,7 +122,10 @@ def process_batch(input_csv: str, output_csv: str) -> None:
         row_dict["clinical_recommendation"] = calc_res["clinical_recommendation"]
         out_rows.append(row_dict)
 
-    with open(output_csv, mode="w", encoding="utf-8", newline="") as f:
+    output_path = os.path.abspath(output_csv)
+    os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
+
+    with open(output_path, mode="w", encoding="utf-8", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=out_fields)
         writer.writeheader()
         writer.writerows(out_rows)
