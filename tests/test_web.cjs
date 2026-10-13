@@ -17,6 +17,11 @@ test("reject invalid, incomplete and non-numeric component scores", () => {
     assert.throws(() => core.grade(v,1,2));
   });
 });
+test("decimal-form integer component scores", () => {
+  assert.equal(core.grade("1.0","2.00","3").score,6);
+  assert.throws(() => core.grade(true,1,1));
+  assert.throws(() => core.grade("0x1",1,1));
+});
 test("batch grading handles BOM, quoted fields, and malicious CSV labels", () => {
   const rows = batch.assess('\uFEFFcase_id,v1,v2,v3\r\n"CASE, A",1,2,3\r\n"=2+2",3,3,3\r\n');
   assert.equal(rows.length,2);
