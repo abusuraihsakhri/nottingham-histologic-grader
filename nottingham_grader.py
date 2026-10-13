@@ -44,6 +44,11 @@ def process_batch(input_csv, output_csv):
                              for k, v in row.items()})
     print(f"Processed {len(rows)} records -> {output_csv}")
 
+def process_single(args):
+    """Compatibility entry point for one CLI case."""
+    print(json.dumps(calculate_metrics(v1=args.v1, v2=args.v2, v3=args.v3), indent=2))
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description="Nottingham histologic grader")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -55,7 +60,7 @@ def main(argv=None):
     batch.add_argument("-o", "--output", default="results.csv")
     args = parser.parse_args(argv)
     if args.command == "single":
-        print(json.dumps(calculate_metrics(v1=args.v1, v2=args.v2, v3=args.v3), indent=2))
+        process_single(args)
     else:
         process_batch(args.input, args.output)
 
