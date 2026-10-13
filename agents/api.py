@@ -3,6 +3,7 @@ FastAPI REST API Server for Nottingham Histologic Grader.
 """
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 from pydantic import Field
 from nottingham_grader import calculate_metrics
@@ -76,3 +77,7 @@ def api_chat(req: ChatRequest):
 @app.get("/api/audit/logs")
 def api_audit_logs():
     return {"audit_trail": AuditLogger.get_trail(), "verified": AuditLogger.verify_integrity()}
+
+
+# Keep the demonstration API routes above this static fallback.
+app.mount("/", StaticFiles(directory=Path(__file__).resolve().parent.parent / "web", html=True), name="web")
