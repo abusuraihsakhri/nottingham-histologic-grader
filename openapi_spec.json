@@ -2,111 +2,106 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Nottingham Histologic Grader API",
-    "description": "Enterprise Distributed Component Platform (Clinical & Cryptographic AI) adhering to CAP / CLSI / NIST Standards.",
-    "version": "3.0.0-ENTERPRISE",
-    "contact": {
-      "name": "Dr. Abu Suraih Sakhri",
-      "url": "https://github.com/abusuraihsakhri"
-    }
+    "version": "3.1.0",
+    "description": "Deterministic Nottingham grading plus a legacy synthetic demonstration API. Use de-identified educational inputs only."
   },
   "paths": {
     "/health": {
       "get": {
-        "summary": "Health and metadata check",
+        "summary": "Service health",
         "responses": {
           "200": {
-            "description": "System optimal"
+            "description": "Health metadata"
           }
         }
       }
     },
-    "/metrics": {
-      "get": {
-        "summary": "Prometheus operational metrics",
+    "/api/grade": {
+      "post": {
+        "summary": "Grade three pre-assigned morphologic component scores",
+        "description": "Each input must be an integer 1-3. The mitotic component score must already account for microscope field area.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "v1": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 3,
+                    "description": "Tubule formation"
+                  },
+                  "v2": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 3,
+                    "description": "Nuclear pleomorphism"
+                  },
+                  "v3": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 3,
+                    "description": "Calibrated mitotic component score"
+                  }
+                },
+                "required": [
+                  "v1",
+                  "v2",
+                  "v3"
+                ]
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "Prometheus text metrics"
+            "description": "Combined score 3–9 and grade 1–3"
+          },
+          "422": {
+            "description": "Invalid input"
           }
         }
       }
     },
     "/api/audit": {
       "post": {
-        "summary": "Dispatch task payload across specialized workers",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "task_id": {
-                    "type": "string"
-                  },
-                  "target_identifier": {
-                    "type": "string"
-                  },
-                  "primary_metric": {
-                    "type": "number"
-                  },
-                  "secondary_metric": {
-                    "type": "number"
-                  },
-                  "status_descriptor": {
-                    "type": "string"
-                  },
-                  "is_critical_flag": {
-                    "type": "boolean"
-                  }
-                },
-                "required": [
-                  "task_id",
-                  "target_identifier",
-                  "primary_metric"
-                ]
-              }
-            }
-          }
-        },
+        "summary": "Legacy synthetic audit demo",
+        "description": "Not a histologic grading or patient-care endpoint",
         "responses": {
           "200": {
-            "description": "Consensus dossier with HMAC signature"
+            "description": "Synthetic audit dossier"
           }
         }
       }
     },
     "/api/chat": {
       "post": {
-        "summary": "Air-gapped supervisory conversational assistant",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "query": {
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "query"
-                ]
-              }
-            }
-          }
-        },
+        "summary": "Legacy deterministic mock response",
         "responses": {
           "200": {
-            "description": "Supervisory response"
+            "description": "Mock text"
           }
         }
       }
     },
     "/api/audit/logs": {
       "get": {
-        "summary": "Retrieve and cryptographically verify HMAC audit trail",
+        "summary": "In-process synthetic audit demonstration log",
         "responses": {
           "200": {
-            "description": "Cryptographic audit trail"
+            "description": "Audit chain metadata"
+          }
+        }
+      }
+    },
+    "/metrics": {
+      "get": {
+        "summary": "JSON demonstration counters",
+        "responses": {
+          "200": {
+            "description": "JSON counters"
           }
         }
       }
