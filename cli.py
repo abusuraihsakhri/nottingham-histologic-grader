@@ -57,7 +57,7 @@ def main(argv=None) -> int:
         dossier = supervisor.process_task(payload)
         print("=" * 80)
         print(f"  NOTTINGHAM HISTOLOGIC GRADER")
-        print(f"  Domain: Radiology & Neuroimaging Systems | Standard: ACR RADS / Fleischner Society / ASPECTS Guidelines")
+        print(f"  Domain: Synthetic audit demonstration | Standard: Synthetic demonstration only; not a clinical protocol")
         print(f"  Dossier ID: {dossier.dossier_id} | Urgency: [{dossier.overall_urgency.value}]")
         print("=" * 80)
         for a in dossier.alerts:

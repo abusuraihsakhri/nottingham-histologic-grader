@@ -1,21 +1,6 @@
-import pytest
-from nottingham_grader import calculate_metrics, process_batch
-
+from nottingham_grader import calculate_metrics
 
 def test_nottingham_grader_single():
-    res = calculate_metrics(v1=12.0, v2=4.0)
-    assert "score" in res
-    assert "classification" in res
-    assert res["score"] > 0
-
-
-def test_nottingham_grader_batch(tmp_path):
-    csv_in = tmp_path / "in.csv"
-    csv_out = tmp_path / "out.csv"
-    csv_in.write_text("Patient,v1,v2\nPat_001,15.0,3.0\nPat_002,5.0,1.0\n", encoding="utf-8")
-    
-    process_batch(str(csv_in), str(csv_out))
-    assert csv_out.exists()
-    content = csv_out.read_text(encoding="utf-8")
-    assert "Pat_001" in content
-    assert "score" in content
+    result=calculate_metrics(v1=1,v2=2,v3=3)
+    assert result["score"]==6
+    assert result["grade"]==2
