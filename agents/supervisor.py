@@ -1,6 +1,6 @@
 """
 Supervisor Orchestrator & Operations Intelligence for Nottingham Histologic Grader.
-Domain: Radiology & Neuroimaging Systems
+Domain: Synthetic audit demonstration
 """
 import uuid
 from typing import Dict, List
@@ -75,5 +75,5 @@ class SystemSupervisor:
 
     def query_supervisory_chat(self, query: str) -> str:
         PHIGuard.assert_no_phi(query)
-        prompt = f"Supervisor inquiry for Nottingham Histologic Grader under ACR RADS / Fleischner Society / ASPECTS Guidelines: {query}"
+        prompt = f"Supervisor inquiry for Nottingham Histologic Grader under Synthetic demonstration only; not a clinical protocol: {query}"
         return self.llm.invoke(prompt)
