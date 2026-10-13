@@ -1,10 +1,12 @@
 (function (root) {
   "use strict";
   function score(v, label) {
-    if (v === null || v === undefined || String(v).trim() === "") {
+    if (v === null || v === undefined || typeof v === "boolean" || String(v).trim() === "") {
       throw new Error(label + " must be 1, 2 or 3.");
     }
-    var n = Number(v);
+    var raw = String(v).trim();
+    if (!/^[123](?:\\.0+)?$/.test(raw)) throw new Error(label + " must be 1, 2 or 3.");
+    var n = Number(raw);
     if (!Number.isInteger(n) || n < 1 || n > 3) {
       throw new Error(label + " must be 1, 2 or 3.");
     }
