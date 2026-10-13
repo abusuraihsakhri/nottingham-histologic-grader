@@ -18,7 +18,7 @@ supervisor = SystemSupervisor(model_provider="mock")
 app = FastAPI(
     title="Nottingham Histologic Grader API",
     description="Nottingham grade calculator plus legacy demonstration audit API (not clinical decision support)",
-    version="3.0.0-ENTERPRISE",
+    version="3.1.0",
 )
 
 
